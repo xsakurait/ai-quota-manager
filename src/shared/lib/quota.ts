@@ -1,4 +1,5 @@
 import { CATALOG, CONFIG } from "../config/catalog";
+import { resolveAccounts, usageKey } from "./accounts";
 import type {
   KindFilter,
   QuotaStatus,
@@ -102,18 +103,22 @@ export function nextReset(cycle: ResetCycle, now: Date = new Date()): Date {
 }
 
 export function summarize(usage: UsageMap, catalog: readonly ServiceDef[] = CATALOG): Summary {
+  let count = 0;
   let used = 0;
   let limit = 0;
   let exhausted = 0;
   for (const s of catalog) {
-    const u = normalizeUsed(usage[s.id] ?? 0);
-    used += u;
-    limit += s.limit;
-    if (statusOf(s, u) === "exhausted") {
-      exhausted += 1;
+    for (const account of resolveAccounts(s)) {
+      const u = normalizeUsed(usage[usageKey(s.id, account.id || undefined)] ?? 0);
+      count += 1;
+      used += u;
+      limit += s.limit;
+      if (statusOf(s, u) === "exhausted") {
+        exhausted += 1;
+      }
     }
   }
-  return { count: catalog.length, used, limit, exhausted };
+  return { count, used, limit, exhausted };
 }
 
 export function filterServices(
