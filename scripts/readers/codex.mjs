@@ -128,7 +128,10 @@ function main() {
   let existing = [];
   if (existsSync(readingsPath)) {
     try {
-      const parsed = JSON.parse(readFileSync(readingsPath, "utf-8"));
+      // Strip a leading BOM (e.g. when readings.json was last written by
+      // Windows PowerShell 5.1 Set-Content -Encoding UTF8); JSON.parse
+      // would throw on it and silently drop the existing entries.
+      const parsed = JSON.parse(readFileSync(readingsPath, "utf-8").replace(/^\uFEFF/, ""));
       const list = Array.isArray(parsed) ? parsed : parsed?.readings;
       if (Array.isArray(list)) existing = list;
     } catch {
