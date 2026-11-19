@@ -5,10 +5,30 @@ describe("catalog (single source of truth)", () => {
   it("defines env key names", () => {
     expect(ENV_KEYS.appName).toBe("NEXT_PUBLIC_APP_NAME");
     expect(ENV_KEYS.storageKey).toBe("QUOTA_STORAGE_KEY");
+    expect(ENV_KEYS.readingsFile).toBe("READINGS_FILE");
   });
   it("falls back to defaults when env vars are unset", () => {
     expect(CONFIG.appName).toBe("無料枠管理アプリ");
     expect(CONFIG.storageKey).toBe("ai-quota-usage-v1");
+    expect(CONFIG.readingsFile).toBe("./data/readings.json");
+  });
+  it("defines live reading labels, window labels and staleness", () => {
+    expect(CONFIG.readingStaleHours).toBe(24);
+    expect(CONFIG.windowLabels[300]).toBe("5時間");
+    expect(CONFIG.windowLabels[10080]).toBe("週間");
+    expect(CONFIG.windowLabels[43200]).toBe("月間");
+    expect(CONFIG.windowMinuteUnit).toBe("分");
+    expect(CONFIG.liveLabels.title).toBe("ライブ");
+    expect(CONFIG.liveLabels.stale).toBe("古い可能性");
+  });
+  it("gives the muse service a primary account", () => {
+    const muse = CATALOG.find((s) => s.id === "muse");
+    expect(muse?.accounts).toEqual([{ id: "primary", label: "メイン" }]);
+    for (const s of CATALOG) {
+      if (s.id !== "muse") {
+        expect(s.accounts).toBeUndefined();
+      }
+    }
   });
   it("has ordered thresholds", () => {
     expect(CONFIG.thresholds.warning).toBeGreaterThan(0);
@@ -37,7 +57,7 @@ describe("catalog (single source of truth)", () => {
       ids.add(s.id);
       expect(s.name.length).toBeGreaterThan(0);
       expect(["video", "local"]).toContain(s.kind);
-      expect(s.limit).toBeGreaterThan(0);
+      expect(s.limit).toBeGreaterThanOrEqual(0); // 0 = no free tier (e.g. Luma/Pika), note must explain
       expect(s.unit.length).toBeGreaterThan(0);
       expect(["daily", "weekly", "monthly", "5hour"]).toContain(s.cycle);
       expect(s.note.length).toBeGreaterThan(0);
@@ -53,6 +73,7 @@ describe("catalog env overrides", () => {
   afterEach(() => {
     delete process.env[ENV_KEYS.appName];
     delete process.env[ENV_KEYS.storageKey];
+    delete process.env[ENV_KEYS.readingsFile];
     vi.resetModules();
   });
   it("uses env values when set", async () => {
@@ -69,5 +90,12 @@ describe("catalog env overrides", () => {
     const mod = await import("../src/shared/config/catalog");
     expect(mod.CONFIG.appName).toBe("Only Name");
     expect(mod.CONFIG.storageKey).toBe("ai-quota-usage-v1");
+  });
+  it("uses the READINGS_FILE env value when set", async () => {
+    process.env[ENV_KEYS.readingsFile] = "/tmp/custom-readings.json";
+    vi.resetModules();
+    const mod = await import("../src/shared/config/catalog");
+    expect(mod.CONFIG.readingsFile).toBe("/tmp/custom-readings.json");
+    expect(mod.CONFIG.appName).toBe("無料枠管理アプリ");
   });
 });
