@@ -5,6 +5,9 @@ import type { LiveReading, ReadingWindow } from "../types";
  * Live readings: measured usage snapshots produced outside the app
  * (reader scripts, external agents) and delivered as a JSON document:
  * `{ "readings": LiveReading[] }` (a bare array is also accepted).
+ * A window normally carries `usedPercent`; balance-type services (an
+ * accumulating balance with no cap, e.g. Civitai Buzz) instead carry a
+ * free-text `detail` measurement, and `usedPercent` is omitted.
  * Every parser here is defensive: invalid input is skipped, never thrown.
  */
 
@@ -20,11 +23,27 @@ export function parseReadingWindow(value: unknown): ReadingWindow | null {
   if (!isRecord(value)) {
     return null;
   }
-  const { windowMinutes, usedPercent, resetsAt } = value;
-  if (!isFiniteNumber(windowMinutes) || !isFiniteNumber(usedPercent) || !isFiniteNumber(resetsAt)) {
+  const { windowMinutes, resetsAt } = value;
+  if (!isFiniteNumber(windowMinutes) || !isFiniteNumber(resetsAt)) {
     return null;
   }
-  return { windowMinutes, usedPercent, resetsAt };
+  // An invalid usedPercent (non-number / NaN) is treated as absent, and a
+  // non-string or empty detail is treated as absent; the window is valid
+  // only when at least one of the two measurements survives.
+  const usedPercent = isFiniteNumber(value.usedPercent) ? value.usedPercent : undefined;
+  const detail =
+    typeof value.detail === "string" && value.detail !== "" ? value.detail : undefined;
+  if (usedPercent === undefined && detail === undefined) {
+    return null;
+  }
+  const window: ReadingWindow = { windowMinutes, resetsAt };
+  if (usedPercent !== undefined) {
+    window.usedPercent = usedPercent;
+  }
+  if (detail !== undefined) {
+    window.detail = detail;
+  }
+  return window;
 }
 
 export function parseLiveReading(value: unknown): LiveReading | null {

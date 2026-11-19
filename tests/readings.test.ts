@@ -50,6 +50,49 @@ describe("parseReadingWindow", () => {
   });
 });
 
+describe("parseReadingWindow balance-type windows", () => {
+  const detailWindow = { windowMinutes: 1440, detail: "Blue Buzz 残高 1,234", resetsAt: FUTURE };
+  it("parses a detail-only window and keeps the detail", () => {
+    const parsed = parseReadingWindow(detailWindow);
+    expect(parsed).toEqual(detailWindow);
+    expect(parsed?.usedPercent).toBeUndefined();
+  });
+  it("parses a window with both percent and detail", () => {
+    const both = { windowMinutes: 10080, usedPercent: 8.1, detail: "Blue Buzz 残高 1,234", resetsAt: FUTURE };
+    expect(parseReadingWindow(both)).toEqual(both);
+  });
+  it("rejects a window with neither percent nor detail", () => {
+    expect(parseReadingWindow({ windowMinutes: 1440, resetsAt: FUTURE })).toBeNull();
+  });
+  it("treats an invalid usedPercent as absent when a detail is present", () => {
+    const nan = parseReadingWindow({ windowMinutes: 1440, usedPercent: Number.NaN, detail: "残高 10", resetsAt: FUTURE });
+    expect(nan).toEqual({ windowMinutes: 1440, detail: "残高 10", resetsAt: FUTURE });
+    expect(nan?.usedPercent).toBeUndefined();
+    const text = parseReadingWindow({ windowMinutes: 1440, usedPercent: "42", detail: "残高 10", resetsAt: FUTURE });
+    expect(text?.usedPercent).toBeUndefined();
+    expect(text?.detail).toBe("残高 10");
+  });
+  it("ignores a non-string detail", () => {
+    const withPercent = parseReadingWindow({ windowMinutes: 300, usedPercent: 42, detail: 1234, resetsAt: FUTURE });
+    expect(withPercent).toEqual({ windowMinutes: 300, usedPercent: 42, resetsAt: FUTURE });
+    expect(withPercent?.detail).toBeUndefined();
+    expect(parseReadingWindow({ windowMinutes: 1440, detail: 1234, resetsAt: FUTURE })).toBeNull();
+  });
+  it("ignores an empty-string detail", () => {
+    const withPercent = parseReadingWindow({ windowMinutes: 300, usedPercent: 42, detail: "", resetsAt: FUTURE });
+    expect(withPercent?.detail).toBeUndefined();
+    expect(parseReadingWindow({ windowMinutes: 1440, detail: "", resetsAt: FUTURE })).toBeNull();
+  });
+  it("rejects a reading whose only windows are measurement-less", () => {
+    const entry = { ...validEntry, windows: [{ windowMinutes: 1440, resetsAt: FUTURE }] };
+    expect(parseLiveReading(entry)).toBeNull();
+  });
+  it("parses a reading with a detail-only window", () => {
+    const parsed = parseLiveReading({ ...validEntry, windows: [detailWindow] });
+    expect(parsed?.windows).toEqual([detailWindow]);
+  });
+});
+
 describe("parseLiveReading", () => {
   it("parses a minimal valid reading", () => {
     expect(parseLiveReading(validEntry)).toEqual({

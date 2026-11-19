@@ -24,7 +24,12 @@ export interface ServiceDef {
 
 export interface ReadingWindow {
   windowMinutes: number;
-  usedPercent: number;
+  /** Omitted for balance-type windows (an accumulating balance with no
+   *  cap), where a used percent is meaningless; see `detail`. */
+  usedPercent?: number;
+  /** Free-text measurement for balance-type windows,
+   *  e.g. "Blue Buzz 残高 1,234". */
+  detail?: string;
   /** Unix seconds when this window resets. */
   resetsAt: number;
 }
