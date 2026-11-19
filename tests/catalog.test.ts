@@ -76,8 +76,8 @@ describe("catalog (single source of truth)", () => {
     expect(new Set(CATALOG.map((s) => s.kind))).toEqual(new Set(["video", "image", "local", "gpu", "voice"]));
     expect(new Set(CATALOG.map((s) => s.cycle))).toEqual(new Set(["daily", "weekly", "monthly", "5hour"]));
   });
-  it("has 19 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
-    expect(CATALOG.length).toBe(19);
+  it("has 21 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
+    expect(CATALOG.length).toBe(21);
     expect(CATALOG.find((s) => s.id === "kaggle")).toMatchObject({
       name: "Kaggle GPU",
       kind: "gpu",
@@ -141,6 +141,8 @@ describe("catalog (single source of truth)", () => {
       "viyou",
       "civitai",
       "mage",
+      "vidu",
+      "flow",
     ];
     for (const id of creditBased) {
       const s = CATALOG.find((x) => x.id === id);
@@ -206,6 +208,31 @@ describe("catalog (single source of truth)", () => {
       unit: "%(無料GPU・上限非公開)",
       cycle: "daily",
     });
+  });
+  it("includes Vidu (percent-manual, amounts unpublished) and Google Flow (50 credits/day)", () => {
+    expect(CATALOG.find((s) => s.id === "vidu")).toMatchObject({
+      name: "Vidu",
+      kind: "video",
+      limit: 100,
+      unit: "credits",
+      cycle: "daily",
+      dashboardUrl: "https://www.vidu.com/",
+    });
+    // Both the signup trial amount and the daily login amount are officially unpublished.
+    const vidu = CATALOG.find((s) => s.id === "vidu");
+    expect(vidu?.note).toContain("非公開");
+    expect(vidu?.note).toContain("毎日ログイン");
+    expect(CATALOG.find((s) => s.id === "flow")).toMatchObject({
+      name: "Google Flow",
+      kind: "video",
+      limit: 50,
+      unit: "credits",
+      cycle: "daily",
+      dashboardUrl: "https://labs.google/fx/tools/flow",
+    });
+    const flow = CATALOG.find((s) => s.id === "flow");
+    expect(flow?.note).toContain("繰越なし");
+    expect(flow?.note).toContain("初回生成");
   });
 });
 
