@@ -76,8 +76,8 @@ describe("catalog (single source of truth)", () => {
     expect(new Set(CATALOG.map((s) => s.kind))).toEqual(new Set(["video", "image", "local", "gpu", "voice"]));
     expect(new Set(CATALOG.map((s) => s.cycle))).toEqual(new Set(["daily", "weekly", "monthly", "5hour"]));
   });
-  it("has 21 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
-    expect(CATALOG.length).toBe(21);
+  it("has 22 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
+    expect(CATALOG.length).toBe(22);
     expect(CATALOG.find((s) => s.id === "kaggle")).toMatchObject({
       name: "Kaggle GPU",
       kind: "gpu",
@@ -143,6 +143,7 @@ describe("catalog (single source of truth)", () => {
       "mage",
       "vidu",
       "flow",
+      "seedance",
     ];
     for (const id of creditBased) {
       const s = CATALOG.find((x) => x.id === id);
@@ -233,6 +234,20 @@ describe("catalog (single source of truth)", () => {
     const flow = CATALOG.find((s) => s.id === "flow");
     expect(flow?.note).toContain("繰越なし");
     expect(flow?.note).toContain("初回生成");
+  });
+  it("includes Seedance (Dreamina) with the US daily figure pending JP account confirmation", () => {
+    expect(CATALOG.find((s) => s.id === "seedance")).toMatchObject({
+      name: "Seedance (Dreamina)",
+      kind: "video",
+      limit: 120,
+      unit: "credits",
+      cycle: "daily",
+      dashboardUrl: "https://dreamina.capcut.com/",
+    });
+    // The 120/day figure is the US daily grant; the note must flag it as unconfirmed for Japan.
+    const seedance = CATALOG.find((s) => s.id === "seedance");
+    expect(seedance?.note).toContain("米国で120/日");
+    expect(seedance?.note).toContain("要実アカウント確認");
   });
 });
 
