@@ -6,10 +6,27 @@ merge them into ./data/readings.json.
 The endpoint is the one behind the official Kaggle MCP server's
 `get_accelerator_quota` tool (https://www.kaggle.com/mcp):
 
-    POST https://www.kaggle.com/kernels.KernelsApiService/GetAcceleratorQuotaStatistics
+    POST https://api.kaggle.com/v1/kernels.KernelsApiService/GetAcceleratorQuotaStatistics
     Authorization: Bearer <KGAT API token>
     Content-Type: application/json
     Body: {} (Connect-RPC JSON style)
+
+(The www.kaggle.com host without the /api/v1 prefix returns HTTP 400;
+api.kaggle.com/v1 is the correct base — verified live 2026-11-19. The
+verified response shape is:
+
+    {"quotaRefreshTime": "2026-11-21T00:00:00Z",
+     "gpuQuota": {"timeUsed": "8737.256s", "timeReserved": "0s",
+                  "totalTimeAllowed": "108000s",
+                  "minimumTimeAllowed": "108000s", "hasEverRun": true},
+     "tpuQuota": {"timeUsed": "0s", "timeReserved": "0s",
+                  "totalTimeAllowed": "72000s",
+                  "minimumTimeAllowed": "72000s"}}
+
+Durations are protobuf-style strings in seconds; quotaRefreshTime is
+the real weekly reset instant. The official kagglesdk crashes parsing
+this response — its TimeDelta parser expects fractional seconds — so
+this reader parses the raw JSON itself.)
 
 Run this AS THE KAGGLE ACCOUNT OWNER, with the API token in the
 environment (never pass it as an argument — it would leak into shell
@@ -25,19 +42,21 @@ scripts/readers/modal_billing.py):
 - Merges { serviceId: "kaggle" | "kaggle-tpu", source: "kaggle-api", ... }
   into ./data/readings.json, preserving other services' entries and
   replacing any previous entries for the services it writes.
-- The endpoint's response shape is not a stable public contract, so the
-  parser is deliberately tolerant (see extract_accelerator_stats). If
-  nothing recognizable is found, the HTTP status and a truncated
-  response body are printed for diagnosis and the script exits 0
-  WITHOUT touching the file.
+- The parser first tries the live-verified shape above
+  (extract_verified_stats). The endpoint is still not a stable public
+  contract, so a deliberately tolerant generic extractor
+  (extract_accelerator_stats) remains as a fallback. If nothing
+  recognizable is found, the HTTP status and a truncated response body
+  are printed for diagnosis and the script exits 0 WITHOUT touching
+  the file.
 - Missing env var, network errors, and HTTP errors all print a message
   and exit 0 WITHOUT touching the file.
 - The token value is never printed.
 
-Note on resetsAt: Kaggle's weekly accelerator quota resets on a weekly
-cycle; the exact reset instant is not exposed by this endpoint, so
-resetsAt is APPROXIMATED as next Monday 00:00 UTC. Treat it as a guide,
-not an exact deadline.
+Note on resetsAt: taken from the response's quotaRefreshTime (the
+real weekly reset instant) whenever present. Only when it is absent
+does resetsAt fall back to an APPROXIMATION — next Monday 00:00 UTC —
+which should be treated as a guide, not an exact deadline.
 """
 import json
 import os
@@ -47,7 +66,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime, time, timedelta, timezone
 
-ENDPOINT = "https://www.kaggle.com/kernels.KernelsApiService/GetAcceleratorQuotaStatistics"
+ENDPOINT = "https://api.kaggle.com/v1/kernels.KernelsApiService/GetAcceleratorQuotaStatistics"
 SOURCE = "kaggle-api"
 WEEKLY_WINDOW_MINUTES = 10080
 # Catalog ids (src/shared/config/catalog.ts) per accelerator type. GPU and
@@ -162,6 +181,59 @@ def extract_accelerator_stats(payload):
         for accel, slot in found.items()
         if accel in SERVICE_IDS and "used" in slot and "quota" in slot
     }
+
+
+def duration_to_seconds(value):
+    """Seconds from a protobuf-Duration-style value: a duration string
+    ("8737.256s", "0s"), a plain number / numeric string (seconds), or a
+    structured {"seconds": ...}. Returns None when unusable."""
+    parsed = as_number(value)
+    if parsed is None:
+        return None
+    number, unit = parsed
+    if unit == "minutes":
+        return number * 60
+    if unit == "hours":
+        return number * 3600
+    return number  # "seconds", or unit-less (these fields are durations)
+
+
+def extract_verified_stats(payload):
+    """PRIMARY parser for the live-verified response shape
+    (2026-11-19): top-level gpuQuota / tpuQuota objects whose timeUsed
+    and totalTimeAllowed are protobuf duration strings in seconds.
+    Returns {accel: {"used_seconds": float, "total_seconds": float}}
+    for accelerators with a complete pair."""
+    if not isinstance(payload, dict):
+        return {}
+    stats = {}
+    for accel, key in (("gpu", "gpuQuota"), ("tpu", "tpuQuota")):
+        node = payload.get(key)
+        if not isinstance(node, dict):
+            continue
+        used = duration_to_seconds(node.get("timeUsed"))
+        total = duration_to_seconds(node.get("totalTimeAllowed"))
+        if used is None or total is None:
+            continue
+        stats[accel] = {"used_seconds": used, "total_seconds": total}
+    return stats
+
+
+def parse_refresh_time(payload):
+    """Unix seconds of the response's quotaRefreshTime (ISO 8601, the
+    real weekly reset instant), or None when absent/unparseable."""
+    if not isinstance(payload, dict):
+        return None
+    raw = payload.get("quotaRefreshTime")
+    if not isinstance(raw, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return int(parsed.timestamp())
 
 
 def pair_to_hours(used, quota):
@@ -280,25 +352,62 @@ def main() -> int:
         )
         return 0
 
-    stats = extract_accelerator_stats(payload)
-    if not stats:
-        print(
-            f"[kaggle-reader] HTTP 200 but no GPU/TPU used+quota pair was recognized in the response. "
-            f"Response body (truncated): {body[:500]}. Nothing was written."
-        )
+    now = datetime.now(timezone.utc)
+    # resetsAt: the response's quotaRefreshTime is the real reset
+    # instant; the next-Monday approximation is only a fallback.
+    resets_at = parse_refresh_time(payload)
+    if resets_at is None:
+        resets_at = next_monday_midnight_unix(now)
+
+    # Normalize both parsers to (accel, used_hours, quota_hours,
+    # used_percent) entries. Primary: the live-verified shape.
+    # Fallback: the generic tolerant extractor, in case the shape
+    # changes again.
+    entries = []
+    verified = extract_verified_stats(payload)
+    stats = {}
+    if verified:
+        for accel in ("gpu", "tpu"):
+            if accel not in verified:
+                continue
+            used_seconds = verified[accel]["used_seconds"]
+            total_seconds = verified[accel]["total_seconds"]
+            if total_seconds <= 0:
+                continue
+            entries.append(
+                (
+                    accel,
+                    used_seconds / 3600,
+                    total_seconds / 3600,
+                    round(used_seconds / total_seconds * 100, 1),
+                )
+            )
+    else:
+        stats = extract_accelerator_stats(payload)
+        for accel in ("gpu", "tpu"):
+            if accel not in stats:
+                continue
+            used_hours, quota_hours = pair_to_hours(stats[accel]["used"], stats[accel]["quota"])
+            if quota_hours <= 0:
+                continue
+            entries.append((accel, used_hours, quota_hours, round(used_hours / quota_hours * 100, 1)))
+
+    if not entries:
+        if not verified and not stats:
+            print(
+                f"[kaggle-reader] HTTP 200 but no GPU/TPU used+quota pair was recognized in the response. "
+                f"Response body (truncated): {body[:500]}. Nothing was written."
+            )
+        else:
+            print(
+                f"[kaggle-reader] HTTP 200 but all recognized quotas were zero. "
+                f"Response body (truncated): {body[:500]}. Nothing was written."
+            )
         return 0
 
-    now = datetime.now(timezone.utc)
-    resets_at = next_monday_midnight_unix(now)
     readings = []
     summaries = []
-    for accel in ("gpu", "tpu"):
-        if accel not in stats:
-            continue
-        used_hours, quota_hours = pair_to_hours(stats[accel]["used"], stats[accel]["quota"])
-        if quota_hours <= 0:
-            continue
-        used_percent = round(used_hours / quota_hours * 100, 1)
+    for accel, used_hours, quota_hours, used_percent in entries:
         readings.append(
             {
                 "serviceId": SERVICE_IDS[accel],
@@ -315,13 +424,6 @@ def main() -> int:
             }
         )
         summaries.append(f"{LABELS[accel]} {used_hours:.1f}h / {format_hours(quota_hours)}h ({used_percent}% used)")
-
-    if not readings:
-        print(
-            f"[kaggle-reader] HTTP 200 but all recognized quotas were zero. "
-            f"Response body (truncated): {body[:500]}. Nothing was written."
-        )
-        return 0
 
     readings_path = merge_readings(readings)
     print(f"[kaggle-reader] Wrote {len(readings)} reading(s) ({'; '.join(summaries)}) to {readings_path}")
