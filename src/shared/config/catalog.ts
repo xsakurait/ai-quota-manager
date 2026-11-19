@@ -52,5 +52,6 @@ export const CATALOG: ServiceDef[] = [
   { id: "muse", name: "Muse", kind: "local", limit: 100, unit: "%/枠", cycle: "monthly", note: "クラウド管理のため手入力。アカウント追加はこの accounts に1件足すだけ（docs/09 参照）", accounts: [{ id: "primary", label: "メイン" }] },
   { id: "kaggle", name: "Kaggle GPU", kind: "gpu", limit: 30, unit: "時間/週", cycle: "weekly", note: "GPU 30時間/週 (公式MCP get_accelerator_quota で取得可)" },
   { id: "kaggle-tpu", name: "Kaggle TPU", kind: "gpu", limit: 20, unit: "時間/週", cycle: "weekly", note: "TPU 最大20時間/週" },
+  { id: "modal", name: "Modal", kind: "gpu", limit: 30, unit: "USD/月", cycle: "monthly", note: "Starter $30/月の無料クレジット。billing APIはTeam/Enterprise向けのためStarterはダッシュボード確認が基本" },
   { id: "elevenlabs", name: "ElevenLabs", kind: "voice", limit: 10000, unit: "credits/月", cycle: "monthly", note: "無料プラン 10,000クレジット/月 (subscription APIで取得可)" },
 ];

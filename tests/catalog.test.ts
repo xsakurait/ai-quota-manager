@@ -75,8 +75,8 @@ describe("catalog (single source of truth)", () => {
     expect(new Set(CATALOG.map((s) => s.kind))).toEqual(new Set(["video", "local", "gpu", "voice"]));
     expect(new Set(CATALOG.map((s) => s.cycle))).toEqual(new Set(["daily", "weekly", "monthly", "5hour"]));
   });
-  it("has 12 services including Kaggle GPU/TPU and ElevenLabs", () => {
-    expect(CATALOG.length).toBe(12);
+  it("has 13 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
+    expect(CATALOG.length).toBe(13);
     expect(CATALOG.find((s) => s.id === "kaggle")).toMatchObject({
       name: "Kaggle GPU",
       kind: "gpu",
@@ -90,6 +90,13 @@ describe("catalog (single source of truth)", () => {
       limit: 20,
       unit: "時間/週",
       cycle: "weekly",
+    });
+    expect(CATALOG.find((s) => s.id === "modal")).toMatchObject({
+      name: "Modal",
+      kind: "gpu",
+      limit: 30,
+      unit: "USD/月",
+      cycle: "monthly",
     });
     expect(CATALOG.find((s) => s.id === "elevenlabs")).toMatchObject({
       name: "ElevenLabs",
