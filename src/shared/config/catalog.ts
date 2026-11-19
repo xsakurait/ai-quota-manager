@@ -8,11 +8,17 @@ import type { ResetCycle, ServiceDef, ServiceKind, Status } from "../types";
 export const ENV_KEYS = {
   appName: "NEXT_PUBLIC_APP_NAME",
   storageKey: "QUOTA_STORAGE_KEY",
+  readingsFile: "READINGS_FILE",
 } as const;
 
 export const CONFIG = {
   appName: process.env[ENV_KEYS.appName] ?? "無料枠管理アプリ",
   storageKey: process.env[ENV_KEYS.storageKey] ?? "ai-quota-usage-v1",
+  readingsFile: process.env[ENV_KEYS.readingsFile] ?? "./data/readings.json",
+  readingStaleHours: 24,
+  windowLabels: { 300: "5時間", 10080: "週間", 43200: "月間" } as Record<number, string>,
+  windowMinuteUnit: "分",
+  liveLabels: { title: "ライブ", stale: "古い可能性" },
   thresholds: { warning: 70, exhausted: 100 },
   statusLabels: { ok: "通常", warning: "注意", exhausted: "枯渇" } as Record<Status, string>,
   kindLabels: { video: "動画生成", local: "ローカル" } as Record<ServiceKind, string>,
@@ -30,12 +36,12 @@ export const CONFIG = {
 
 export const CATALOG: ServiceDef[] = [
   { id: "runway", name: "Runway", kind: "video", limit: 125, unit: "credits(初回)", cycle: "monthly", note: "無料プランの初期クレジット目安" },
-  { id: "kling", name: "Kling AI", kind: "video", limit: 66, unit: "credits/日", cycle: "daily", note: "ログインで日次付与の目安" },
-  { id: "luma", name: "Luma Dream Machine", kind: "video", limit: 30, unit: "生成/月", cycle: "monthly", note: "無料枠の目安" },
-  { id: "hailuo", name: "Hailuo (MiniMax)", kind: "video", limit: 1000, unit: "credits(初回)", cycle: "monthly", note: "初期クレジット目安" },
-  { id: "pixverse", name: "PixVerse", kind: "video", limit: 100, unit: "credits/日", cycle: "daily", note: "日次付与の目安" },
-  { id: "pika", name: "Pika", kind: "video", limit: 80, unit: "credits/月", cycle: "monthly", note: "無料枠の目安" },
+  { id: "kling", name: "Kling AI", kind: "video", limit: 66, unit: "credits/月(Trial)", cycle: "monthly", note: "日次付与は加入者限定。非加入者は月次Trial(額は公式非公開、66は報告ベースの目安・要実確認)" },
+  { id: "luma", name: "Luma Dream Machine", kind: "video", limit: 0, unit: "トライアル(額非公開)", cycle: "monthly", note: "現行pricingに無料プランなし。トライアル額は非公開のため0で登録" },
+  { id: "hailuo", name: "Hailuo (MiniMax)", kind: "video", limit: 150, unit: "credits(初回)", cycle: "monthly", note: "初回ウェルカムパックは額非公開(報告約150の目安)。3日で失効" },
+  { id: "pixverse", name: "PixVerse", kind: "video", limit: 30, unit: "credits/日", cycle: "daily", note: "初回60クレジット+毎日30クレジット(二次情報ベース・要実確認)" },
+  { id: "pika", name: "Pika", kind: "video", limit: 0, unit: "credits/月", cycle: "monthly", note: "実質無料生成なし(0クレジット/月、パック購入制)" },
   { id: "codex", name: "Codex (ローカル)", kind: "local", limit: 100, unit: "%/5時間枠", cycle: "5hour", note: "使用率は手入力。週間枠はメモ欄で管理" },
   { id: "antigravity", name: "Antigravity (ローカル)", kind: "local", limit: 100, unit: "%/週枠", cycle: "weekly", note: "使用率は手入力" },
-  { id: "muse", name: "Muse", kind: "local", limit: 100, unit: "%/枠", cycle: "monthly", note: "クラウド管理のため手入力" },
+  { id: "muse", name: "Muse", kind: "local", limit: 100, unit: "%/枠", cycle: "monthly", note: "クラウド管理のため手入力。アカウント追加はこの accounts に1件足すだけ（docs/09 参照）", accounts: [{ id: "primary", label: "メイン" }] },
 ];
