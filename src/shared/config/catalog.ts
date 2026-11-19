@@ -55,6 +55,7 @@ export const CATALOG: ServiceDef[] = [
   { id: "mage", name: "Mage", kind: "image", limit: 300, unit: "Gems(初回)", cycle: "monthly", dashboardUrl: "https://www.mage.space/", note: "登録時に300 Gems(初回のみ・付与から90日で失効)。旧来の無制限無料枠は廃止済み。動画・キャラクター生成も可(無料枠は主に画像)" },
   { id: "codex", name: "Codex (ローカル)", kind: "local", limit: 100, unit: "%/5時間枠", cycle: "5hour", dashboardUrl: "https://chatgpt.com/codex/settings/usage", note: "使用率は手入力。週間枠はメモ欄で管理" },
   { id: "antigravity", name: "Antigravity (ローカル)", kind: "local", limit: 100, unit: "%/週枠", cycle: "weekly", note: "使用率は手入力" },
+  { id: "cursor", name: "Cursor (ローカル)", kind: "local", limit: 100, unit: "%(included usage・上限非公開)", cycle: "weekly", dashboardUrl: "https://cursor.com/dashboard", note: "Freeプランの included usage をダッシュボード表示の%で管理。具体的な上限値(リクエスト数等)は非公開。リセット日はダッシュボード表示が正(確認時: 2026-11-21)。確認はブラウザのダッシュボードのみ(公開APIなし)" },
   { id: "muse", name: "Muse", kind: "local", limit: 100, unit: "%/枠", cycle: "monthly", note: "クラウド管理のため手入力。アカウント追加はこの accounts に1件足すだけ（docs/09 参照）", accounts: [{ id: "primary", label: "メイン" }] },
   { id: "kaggle", name: "Kaggle GPU", kind: "gpu", limit: 30, unit: "時間/週", cycle: "weekly", dashboardUrl: "https://www.kaggle.com/settings", note: "GPU 30時間/週 (公式MCP get_accelerator_quota で取得可)" },
   { id: "kaggle-tpu", name: "Kaggle TPU", kind: "gpu", limit: 20, unit: "時間/週", cycle: "weekly", dashboardUrl: "https://www.kaggle.com/settings", note: "TPU 最大20時間/週" },

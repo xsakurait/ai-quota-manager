@@ -76,8 +76,8 @@ describe("catalog (single source of truth)", () => {
     expect(new Set(CATALOG.map((s) => s.kind))).toEqual(new Set(["video", "image", "local", "gpu", "voice"]));
     expect(new Set(CATALOG.map((s) => s.cycle))).toEqual(new Set(["daily", "weekly", "monthly", "5hour"]));
   });
-  it("has 18 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
-    expect(CATALOG.length).toBe(18);
+  it("has 19 services including Kaggle GPU/TPU, Modal and ElevenLabs", () => {
+    expect(CATALOG.length).toBe(19);
     expect(CATALOG.find((s) => s.id === "kaggle")).toMatchObject({
       name: "Kaggle GPU",
       kind: "gpu",
@@ -106,6 +106,23 @@ describe("catalog (single source of truth)", () => {
       unit: "credits/月",
       cycle: "monthly",
     });
+  });
+  it("includes Cursor as a percent-style local coding tool next to Antigravity", () => {
+    expect(CATALOG.find((s) => s.id === "cursor")).toMatchObject({
+      name: "Cursor (ローカル)",
+      kind: "local",
+      limit: 100,
+      unit: "%(included usage・上限非公開)",
+      cycle: "weekly",
+      dashboardUrl: "https://cursor.com/dashboard",
+    });
+    const cursor = CATALOG.find((s) => s.id === "cursor");
+    // The dashboard is the authority: no numeric limit is published, the note must say so.
+    expect(cursor?.note).toContain("非公開");
+    expect(cursor?.note).toContain("ダッシュボード");
+    const ids = CATALOG.map((s) => s.id);
+    expect(ids.indexOf("cursor")).toBe(ids.indexOf("antigravity") + 1);
+    expect(ids.indexOf("cursor")).toBeLessThan(ids.indexOf("muse"));
   });
   it("defines the dashboard link label", () => {
     expect(CONFIG.dashboardLinkLabel).toBe("使用量ページを開く");
@@ -141,6 +158,7 @@ describe("catalog (single source of truth)", () => {
   });
   it("points dashboard links at the recorded usage/billing pages", () => {
     expect(CATALOG.find((s) => s.id === "codex")?.dashboardUrl).toBe("https://chatgpt.com/codex/settings/usage");
+    expect(CATALOG.find((s) => s.id === "cursor")?.dashboardUrl).toBe("https://cursor.com/dashboard");
     expect(CATALOG.find((s) => s.id === "modal")?.dashboardUrl).toBe("https://modal.com/settings");
     expect(CATALOG.find((s) => s.id === "elevenlabs")?.dashboardUrl).toBe("https://elevenlabs.io/app/subscription");
     expect(CATALOG.find((s) => s.id === "kling")?.dashboardUrl).toBe("https://kling.ai/app/membership/membership-plan");
