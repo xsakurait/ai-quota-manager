@@ -103,7 +103,10 @@ def main() -> int:
     existing = []
     if os.path.exists(readings_path):
         try:
-            with open(readings_path, encoding="utf-8") as fh:
+            # utf-8-sig tolerates a BOM (e.g. when readings.json was last
+            # written by Windows PowerShell 5.1 Set-Content -Encoding UTF8);
+            # plain utf-8 would fail to parse and silently drop entries.
+            with open(readings_path, encoding="utf-8-sig") as fh:
                 parsed = json.load(fh)
             entries = parsed if isinstance(parsed, list) else parsed.get("readings")
             if isinstance(entries, list):
