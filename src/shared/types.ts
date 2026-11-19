@@ -1,4 +1,4 @@
-export type ServiceKind = "video" | "local" | "gpu" | "voice";
+export type ServiceKind = "video" | "image" | "local" | "gpu" | "voice";
 export type ResetCycle = "daily" | "weekly" | "monthly" | "5hour";
 export type Status = "ok" | "warning" | "exhausted";
 export type KindFilter = ServiceKind | "all";
@@ -16,6 +16,9 @@ export interface ServiceDef {
   unit: string;
   cycle: ResetCycle;
   note: string;
+  /** Official usage/billing page opened in a new tab; the login itself is
+   *  handled by the user's existing browser session (no credentials stored). */
+  dashboardUrl?: string;
   accounts?: AccountDef[];
 }
 

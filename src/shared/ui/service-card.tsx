@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "./badge";
+import { Button } from "./button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 import { UsageControls } from "./usage-controls";
 import { CONFIG } from "../config/catalog";
@@ -74,6 +75,13 @@ export function ServiceCard({ service, account, used, reading, nextResetText, on
           onDelta={(s, d) => onDelta(s, d, accountId)}
           onSetUsed={(s, v) => onSetUsed(s, v, accountId)}
         />
+        {service.dashboardUrl ? (
+          <Button asChild variant="outline" size="sm" className="w-full">
+            <a href={service.dashboardUrl} target="_blank" rel="noopener noreferrer">
+              {CONFIG.dashboardLinkLabel}
+            </a>
+          </Button>
+        ) : null}
       </CardContent>
     </Card>
   );
