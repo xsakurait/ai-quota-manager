@@ -58,8 +58,11 @@ export function ServiceCard({ service, account, used, reading, nextResetText, on
             </div>
             {reading.windows.map((w) => (
               <div key={w.windowMinutes}>
-                {windowLabel(w.windowMinutes)}: {w.usedPercent}% / リセット{" "}
-                {new Date(w.resetsAt * 1000).toLocaleString("ja-JP")}
+                {windowLabel(w.windowMinutes)}:{" "}
+                {[w.usedPercent !== undefined ? `${w.usedPercent}%` : null, w.detail ?? null]
+                  .filter((part) => part !== null)
+                  .join(" ")}{" "}
+                / リセット {new Date(w.resetsAt * 1000).toLocaleString("ja-JP")}
               </div>
             ))}
             <div>
