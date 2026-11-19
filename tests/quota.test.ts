@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { CATALOG, CONFIG } from "../src/shared/config/catalog";
+import { resolveAccounts, usageKey } from "../src/shared/lib/accounts";
 import {
   applyDelta,
   buildStatus,
@@ -284,10 +285,34 @@ describe("summarize", () => {
   });
   it("counts exhausted services and totals usage", () => {
     const usage: Record<string, number> = {};
-    for (const s of CATALOG) usage[s.id] = s.limit;
+    for (const s of CATALOG) {
+      for (const account of resolveAccounts(s)) {
+        usage[usageKey(s.id, account.id || undefined)] = s.limit;
+      }
+    }
     const s = summarize(usage);
     expect(s.used).toBe(s.limit);
-    expect(s.exhausted).toBe(CATALOG.length);
+    expect(s.exhausted).toBe(CATALOG.filter((x) => x.limit > 0).length); // limit 0 = no free tier, never counted as exhausted
+  });
+  it("summarizes per account for services with accounts", () => {
+    const cat = [
+      def({
+        id: "m",
+        limit: 100,
+        accounts: [
+          { id: "a", label: "A" },
+          { id: "b", label: "B" },
+        ],
+      }),
+      def({ id: "n", limit: 50 }),
+    ];
+    expect(summarize({ "m:a": 100, "m:b": 40, n: 10 }, cat)).toEqual({
+      count: 3,
+      used: 150,
+      limit: 250,
+      exhausted: 1,
+    });
+    expect(summarize({}, cat)).toEqual({ count: 3, used: 0, limit: 250, exhausted: 0 });
   });
   it("works with a custom catalog and partial usage", () => {
     const cat = [def({ id: "a", limit: 10 }), def({ id: "b", limit: 20 })];

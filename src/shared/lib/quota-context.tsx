@@ -1,18 +1,19 @@
 "use client";
 
 import * as React from "react";
-import type { KindFilter, ServiceDef, Summary, UsageMap } from "../types";
+import type { KindFilter, LiveReading, ServiceDef, Summary, UsageMap } from "../types";
 
 export interface QuotaContextValue {
   services: ServiceDef[];
   usage: UsageMap;
+  readings: LiveReading[];
   summary: Summary;
   query: string;
   kind: KindFilter;
   setQuery: (q: string) => void;
   setKind: (k: KindFilter) => void;
-  onDelta: (service: ServiceDef, delta: number) => void;
-  onSetUsed: (service: ServiceDef, value: number) => void;
+  onDelta: (service: ServiceDef, delta: number, accountId?: string) => void;
+  onSetUsed: (service: ServiceDef, value: number, accountId?: string) => void;
   nextResetText: (service: ServiceDef) => string;
 }
 

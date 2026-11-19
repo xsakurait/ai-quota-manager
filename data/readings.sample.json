@@ -1,0 +1,1 @@
+{"readings":[{"capturedAt":"2026-11-19T00:00:00.000Z","note":"サンプル形式。実ファイルは data/readings.json（Git管理外）","serviceId":"codex","source":"codex-rollout","windows":[{"resetsAt":1795060800,"usedPercent":42,"windowMinutes":300},{"resetsAt":1795489200,"usedPercent":10,"windowMinutes":10080}]}]}

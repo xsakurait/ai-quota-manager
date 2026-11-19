@@ -1,7 +1,9 @@
+import { readFile } from "node:fs/promises";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import { CATALOG, CONFIG } from "../../../shared/config/catalog";
 import { buildStatus, clampUsage, filterServices, findService, summarize } from "../../../shared/lib/quota";
+import { parseReadings } from "../../../shared/lib/readings";
 import type { KindFilter, UsageMap } from "../../../shared/types";
 
 export const runtime = "nodejs";
@@ -64,6 +66,16 @@ app.post("/usage/validate", async (c) => {
     usagePercent: status.usagePercent,
     status: status.status,
   });
+});
+
+app.get("/readings", async (c) => {
+  let text: string;
+  try {
+    text = await readFile(CONFIG.readingsFile, "utf-8");
+  } catch {
+    return c.json({ readings: [] });
+  }
+  return c.json({ readings: parseReadings(text) });
 });
 
 app.get("/status", (c) => {
