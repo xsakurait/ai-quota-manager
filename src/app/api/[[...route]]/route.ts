@@ -17,7 +17,7 @@ function errorBody(code: string, message: string) {
 app.get("/catalog", (c) => {
   const kindParam = c.req.query("kind");
   const kind: KindFilter =
-    kindParam === "video" || kindParam === "local" || kindParam === "gpu" || kindParam === "voice"
+    kindParam === "video" || kindParam === "image" || kindParam === "local" || kindParam === "gpu" || kindParam === "voice"
       ? kindParam
       : "all";
   const q = c.req.query("q") ?? "";
