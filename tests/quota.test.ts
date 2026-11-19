@@ -156,6 +156,8 @@ describe("labels", () => {
     expect(statusLabel("exhausted")).toBe(CONFIG.statusLabels.exhausted);
     expect(kindLabel("video")).toBe(CONFIG.kindLabels.video);
     expect(kindLabel("local")).toBe(CONFIG.kindLabels.local);
+    expect(kindLabel("gpu")).toBe(CONFIG.kindLabels.gpu);
+    expect(kindLabel("voice")).toBe(CONFIG.kindLabels.voice);
     expect(cycleLabel("daily")).toBe(CONFIG.cycleLabels.daily);
     expect(cycleLabel("weekly")).toBe(CONFIG.cycleLabels.weekly);
     expect(cycleLabel("monthly")).toBe(CONFIG.cycleLabels.monthly);
