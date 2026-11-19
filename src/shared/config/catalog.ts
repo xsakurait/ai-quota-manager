@@ -21,14 +21,20 @@ export const CONFIG = {
   liveLabels: { title: "ライブ", stale: "古い可能性" },
   thresholds: { warning: 70, exhausted: 100 },
   statusLabels: { ok: "通常", warning: "注意", exhausted: "枯渇" } as Record<Status, string>,
-  kindLabels: { video: "動画生成", local: "ローカル" } as Record<ServiceKind, string>,
+  kindLabels: { video: "動画生成", local: "ローカル", gpu: "GPU", voice: "音声生成" } as Record<ServiceKind, string>,
+  sectionLabels: {
+    video: "動画生成サービス",
+    local: "ローカルエージェント",
+    gpu: "GPUサービス",
+    voice: "音声生成サービス",
+  } as Record<ServiceKind, string>,
   cycleLabels: {
     daily: "毎日リセット",
     weekly: "毎週リセット",
     monthly: "毎月リセット",
     "5hour": "5時間枠",
   } as Record<ResetCycle, string>,
-  filterLabels: { all: "すべて", video: "動画生成", local: "ローカル" } as Record<
+  filterLabels: { all: "すべて", video: "動画生成", local: "ローカル", gpu: "GPU", voice: "音声生成" } as Record<
     "all" | ServiceKind,
     string
   >,
@@ -44,4 +50,7 @@ export const CATALOG: ServiceDef[] = [
   { id: "codex", name: "Codex (ローカル)", kind: "local", limit: 100, unit: "%/5時間枠", cycle: "5hour", note: "使用率は手入力。週間枠はメモ欄で管理" },
   { id: "antigravity", name: "Antigravity (ローカル)", kind: "local", limit: 100, unit: "%/週枠", cycle: "weekly", note: "使用率は手入力" },
   { id: "muse", name: "Muse", kind: "local", limit: 100, unit: "%/枠", cycle: "monthly", note: "クラウド管理のため手入力。アカウント追加はこの accounts に1件足すだけ（docs/09 参照）", accounts: [{ id: "primary", label: "メイン" }] },
+  { id: "kaggle", name: "Kaggle GPU", kind: "gpu", limit: 30, unit: "時間/週", cycle: "weekly", note: "GPU 30時間/週 (公式MCP get_accelerator_quota で取得可)" },
+  { id: "kaggle-tpu", name: "Kaggle TPU", kind: "gpu", limit: 20, unit: "時間/週", cycle: "weekly", note: "TPU 最大20時間/週" },
+  { id: "elevenlabs", name: "ElevenLabs", kind: "voice", limit: 10000, unit: "credits/月", cycle: "monthly", note: "無料プラン 10,000クレジット/月 (subscription APIで取得可)" },
 ];
