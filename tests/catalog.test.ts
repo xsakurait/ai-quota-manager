@@ -234,6 +234,7 @@ describe("catalog (single source of truth)", () => {
     const flow = CATALOG.find((s) => s.id === "flow");
     expect(flow?.note).toContain("繰越なし");
     expect(flow?.note).toContain("初回生成");
+    expect(flow?.note).toContain("Gemini Omni");
   });
   it("includes Seedance (Dreamina) with the US daily figure pending JP account confirmation", () => {
     expect(CATALOG.find((s) => s.id === "seedance")).toMatchObject({
