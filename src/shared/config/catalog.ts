@@ -16,7 +16,7 @@ export const CONFIG = {
   storageKey: process.env[ENV_KEYS.storageKey] ?? "ai-quota-usage-v1",
   readingsFile: process.env[ENV_KEYS.readingsFile] ?? "./data/readings.json",
   readingStaleHours: 24,
-  windowLabels: { 300: "5時間", 10080: "週間", 43200: "月間" } as Record<number, string>,
+  windowLabels: { 300: "5時間", 1440: "日次", 10080: "週間", 43200: "月間" } as Record<number, string>,
   windowMinuteUnit: "分",
   liveLabels: { title: "ライブ", stale: "古い可能性" },
   dashboardLinkLabel: "使用量ページを開く",

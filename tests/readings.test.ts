@@ -244,6 +244,7 @@ describe("isStale", () => {
 describe("windowLabel", () => {
   it("labels the known windows from config", () => {
     expect(windowLabel(300)).toBe("5時間");
+    expect(windowLabel(1440)).toBe("日次");
     expect(windowLabel(10080)).toBe("週間");
     expect(windowLabel(43200)).toBe("月間");
   });
