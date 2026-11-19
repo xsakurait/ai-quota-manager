@@ -18,7 +18,7 @@ import { Button } from "../../shared/ui/button";
 import { Input } from "../../shared/ui/input";
 import type { KindFilter, LiveReading, ServiceDef, UsageMap } from "../../shared/types";
 
-const KIND_FILTERS: KindFilter[] = ["all", "video", "local", "gpu", "voice"];
+const KIND_FILTERS: KindFilter[] = ["all", "video", "image", "local", "gpu", "voice"];
 
 export function Dashboard({ children }: { children: React.ReactNode }) {
   const [usage, setUsage] = React.useState<UsageMap>({});
