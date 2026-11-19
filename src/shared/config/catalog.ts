@@ -43,8 +43,8 @@ export const CONFIG = {
 } as const;
 
 export const CATALOG: ServiceDef[] = [
-  { id: "runway", name: "Runway", kind: "video", limit: 125, unit: "credits(初回)", cycle: "monthly", dashboardUrl: "https://app.runwayml.com", note: "無料プランの初期クレジット目安" },
-  { id: "kling", name: "Kling AI", kind: "video", limit: 66, unit: "credits/月(Trial)", cycle: "monthly", dashboardUrl: "https://kling.ai/app/membership/membership-plan", note: "日次付与は加入者限定。非加入者は月次Trial(額は公式非公開、66は報告ベースの目安・要実確認)" },
+  { id: "runway", name: "Runway", kind: "video", limit: 500, unit: "credits(初回)", cycle: "monthly", dashboardUrl: "https://app.runwayml.com", note: "実アカウントで確認(2026-11-19): Freeプランは初回500クレジット(残高500・未使用)。月次リフレッシュなし" },
+  { id: "kling", name: "Kling AI", kind: "video", limit: 66, unit: "credits/月(Trial)", cycle: "monthly", dashboardUrl: "https://kling.ai/app/membership/membership-plan", note: "実アカウントで確認(2026-11-19): 非加入者はTrial Packageで66 Bonusクレジット、付与から約1か月の有効期限(確認時は2026-11-19付与・2026-12-20失効)。日次付与は加入者限定" },
   { id: "luma", name: "Luma Dream Machine", kind: "video", limit: 0, unit: "トライアル(額非公開)", cycle: "monthly", dashboardUrl: "https://lumalabs.ai/dream-machine", note: "現行pricingに無料プランなし。トライアル額は非公開のため0で登録" },
   { id: "hailuo", name: "Hailuo (MiniMax)", kind: "video", limit: 150, unit: "credits(初回)", cycle: "monthly", dashboardUrl: "https://hailuoai.video/subscribe", note: "初回ウェルカムパックは額非公開(報告約150の目安)。3日で失効。公式プランページ確認(2026-11-19): Freeは月次クレジット0+初回無料トライアル(額非表示)のため、無料分は初回パックのみ" },
   { id: "pixverse", name: "PixVerse", kind: "video", limit: 30, unit: "credits/日", cycle: "daily", dashboardUrl: "https://app.pixverse.ai/subscribe", note: "初回60クレジット+毎日30クレジット。公式プランページ(Basic)で Initial Credits 60 / Daily Credits 30(毎日リセット)を確認(2026-11-19)" },
