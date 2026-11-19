@@ -155,6 +155,7 @@ describe("labels", () => {
     expect(statusLabel("warning")).toBe(CONFIG.statusLabels.warning);
     expect(statusLabel("exhausted")).toBe(CONFIG.statusLabels.exhausted);
     expect(kindLabel("video")).toBe(CONFIG.kindLabels.video);
+    expect(kindLabel("image")).toBe(CONFIG.kindLabels.image);
     expect(kindLabel("local")).toBe(CONFIG.kindLabels.local);
     expect(kindLabel("gpu")).toBe(CONFIG.kindLabels.gpu);
     expect(kindLabel("voice")).toBe(CONFIG.kindLabels.voice);
