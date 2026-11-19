@@ -1,5 +1,6 @@
 "use client";
 
+import { CONFIG } from "../../shared/config/catalog";
 import { ServiceCard } from "../../shared/ui/service-card";
 import { getUsage, resolveAccounts, usageKey } from "../../shared/lib/accounts";
 import { useQuota } from "../../shared/lib/quota-context";
@@ -12,8 +13,8 @@ export function LocalAgentSection() {
     return null;
   }
   return (
-    <section aria-label="ローカルエージェント" className="space-y-3">
-      <h2 className="text-xl font-semibold">ローカルエージェント</h2>
+    <section aria-label={CONFIG.sectionLabels.local} className="space-y-3">
+      <h2 className="text-xl font-semibold">{CONFIG.sectionLabels.local}</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {items.flatMap((s) =>
           resolveAccounts(s).map((account) => {

@@ -1,4 +1,4 @@
-export type ServiceKind = "video" | "local";
+export type ServiceKind = "video" | "local" | "gpu" | "voice";
 export type ResetCycle = "daily" | "weekly" | "monthly" | "5hour";
 export type Status = "ok" | "warning" | "exhausted";
 export type KindFilter = ServiceKind | "all";

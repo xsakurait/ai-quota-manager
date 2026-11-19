@@ -37,17 +37,25 @@ describe("catalog (single source of truth)", () => {
   });
   it("has labels for every status, kind and cycle", () => {
     expect(Object.keys(CONFIG.statusLabels).sort()).toEqual(["exhausted", "ok", "warning"]);
-    expect(Object.keys(CONFIG.kindLabels).sort()).toEqual(["local", "video"]);
+    expect(Object.keys(CONFIG.kindLabels).sort()).toEqual(["gpu", "local", "video", "voice"]);
+    expect(Object.keys(CONFIG.sectionLabels).sort()).toEqual(["gpu", "local", "video", "voice"]);
     expect(Object.keys(CONFIG.cycleLabels).sort()).toEqual(["5hour", "daily", "monthly", "weekly"]);
-    expect(Object.keys(CONFIG.filterLabels).sort()).toEqual(["all", "local", "video"]);
+    expect(Object.keys(CONFIG.filterLabels).sort()).toEqual(["all", "gpu", "local", "video", "voice"]);
     for (const v of [
       ...Object.values(CONFIG.statusLabels),
       ...Object.values(CONFIG.kindLabels),
+      ...Object.values(CONFIG.sectionLabels),
       ...Object.values(CONFIG.cycleLabels),
       ...Object.values(CONFIG.filterLabels),
     ]) {
       expect(v.length).toBeGreaterThan(0);
     }
+  });
+  it("defines section titles per kind", () => {
+    expect(CONFIG.sectionLabels.video).toBe("動画生成サービス");
+    expect(CONFIG.sectionLabels.local).toBe("ローカルエージェント");
+    expect(CONFIG.sectionLabels.gpu).toBe("GPUサービス");
+    expect(CONFIG.sectionLabels.voice).toBe("音声生成サービス");
   });
   it("catalog entries are well-formed with unique ids", () => {
     const ids = new Set<string>();
@@ -56,16 +64,40 @@ describe("catalog (single source of truth)", () => {
       expect(ids.has(s.id)).toBe(false);
       ids.add(s.id);
       expect(s.name.length).toBeGreaterThan(0);
-      expect(["video", "local"]).toContain(s.kind);
+      expect(["video", "local", "gpu", "voice"]).toContain(s.kind);
       expect(s.limit).toBeGreaterThanOrEqual(0); // 0 = no free tier (e.g. Luma/Pika), note must explain
       expect(s.unit.length).toBeGreaterThan(0);
       expect(["daily", "weekly", "monthly", "5hour"]).toContain(s.cycle);
       expect(s.note.length).toBeGreaterThan(0);
     }
   });
-  it("catalog covers both kinds and all reset cycles", () => {
-    expect(new Set(CATALOG.map((s) => s.kind))).toEqual(new Set(["video", "local"]));
+  it("catalog covers all kinds and all reset cycles", () => {
+    expect(new Set(CATALOG.map((s) => s.kind))).toEqual(new Set(["video", "local", "gpu", "voice"]));
     expect(new Set(CATALOG.map((s) => s.cycle))).toEqual(new Set(["daily", "weekly", "monthly", "5hour"]));
+  });
+  it("has 12 services including Kaggle GPU/TPU and ElevenLabs", () => {
+    expect(CATALOG.length).toBe(12);
+    expect(CATALOG.find((s) => s.id === "kaggle")).toMatchObject({
+      name: "Kaggle GPU",
+      kind: "gpu",
+      limit: 30,
+      unit: "時間/週",
+      cycle: "weekly",
+    });
+    expect(CATALOG.find((s) => s.id === "kaggle-tpu")).toMatchObject({
+      name: "Kaggle TPU",
+      kind: "gpu",
+      limit: 20,
+      unit: "時間/週",
+      cycle: "weekly",
+    });
+    expect(CATALOG.find((s) => s.id === "elevenlabs")).toMatchObject({
+      name: "ElevenLabs",
+      kind: "voice",
+      limit: 10000,
+      unit: "credits/月",
+      cycle: "monthly",
+    });
   });
 });
 
